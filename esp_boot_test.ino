@@ -100,7 +100,8 @@ void setup() {
       // test esid 
       WiFi.begin(esid.c_str(), epass.c_str());
       if ( testWifi() == 20 ) { 
-          launchWeb(0);
+          Serial.println("launching webtype 2");
+          launchWeb(2);
           return;
       }
   }
@@ -125,26 +126,7 @@ int testWifi(void) {
       Serial.print(" as ");
       Serial.println(clientName);
       
-//      if (mqttClient.connect((char*) clientName.c_str())) {
-//        Serial.println("Connected to MQTT broker");
-//        Serial.print("Topic is: ");
-//        Serial.println(topic);
-//        if (mqttClient.subscribe(topic)){
-//          Serial.println("Successfully subscribed");
-//        }
-//        if (mqttClient.publish(topicPublish, "hello from ESP8266")) {
-//          Serial.println("Publish ok");
-//        }
-//        else {
-//          Serial.println("Publish failed");
-//        }
-//      }
-//      else {
-//        Serial.println("MQTT connect failed");
-//        Serial.println("Will reset and try again...");
-//        abort();
-//      }    
-    return(20); 
+      return(20); 
   
     } 
     delay(500);
@@ -173,12 +155,16 @@ void launchWeb(int webtype) {
   // Start the server
   server.begin();
   Serial.println("Server started");
-
+  Serial.print("Webtype: ");  
+  Serial.println(webtype);  
+  
   int b = 20;
-  int c = 0;
-  while(b == 20) { 
+  do{
+    if(webtype != 1){
+      break;
+    }
     b = mdns1(webtype);
-  }
+  } while(b == 20);
   Serial.println("Loop exited!");
 }
 
@@ -280,6 +266,9 @@ int mdns1(int webtype)
         s += "<form method='get' action='a'><label>SSID: </label><input name='ssid' length=32><input name='pass' length=64><input type='submit'></form>";
         s += "</html>\r\n\r\n";
         Serial.println("Sending 200");
+        mdnsClient.print(s);
+        Serial.println("Done with client");
+        return(20);
       }
       else if ( req.startsWith("/a?ssid=") ) {
         // /a?ssid=blahhhh&pass=poooo
@@ -328,15 +317,18 @@ int mdns1(int webtype)
         s += "Found ";
         s += req;
         s += "<p> saved to eeprom... reset to boot into new wifi</html>\r\n\r\n";
+        mdnsClient.print(s);
+        Serial.println("Done with client");
+        return(19);
       }
       else
       {
         s = "HTTP/1.1 404 Not Found\r\n\r\n";
         Serial.println("Sending 404");
+        mdnsClient.print(s);
+        Serial.println("Done with client");
+        return(20);
       }
-      mdnsClient.print(s);
-      Serial.println("Done with client");
-      return(19);
   } 
   else
   {
@@ -361,9 +353,9 @@ int mdns1(int webtype)
         s = "HTTP/1.1 404 Not Found\r\n\r\n";
         Serial.println("Sending 404");
       }
-       mdnsClient.print(s);
-       Serial.println("Done with client");
-       return(20);      
+      mdnsClient.print(s);
+      Serial.println("Done with client");
+      return(19);      
   }
  
 }
